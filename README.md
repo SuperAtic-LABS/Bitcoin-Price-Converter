@@ -1,4 +1,4 @@
-# Bitcoin-Price-Converter===
+# Bitcoin-Price-Converter
 Contributors: superatic
 Tags: bitcoin, btc converter, bitcoin price
 Donate link: https://superatic.com/pay
