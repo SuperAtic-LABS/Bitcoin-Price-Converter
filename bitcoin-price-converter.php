@@ -3,8 +3,7 @@
 Plugin Name: Bitcoin Price Converter
 Description: Converts WooCommerce product prices to Bitcoin using exchange rates.
 Version: 1.0.6
-Author: SuperAtic
-Author URI: http://SuperAtic.com
+Author: Your Name
 */
 
 // Add Bitcoin price conversion to WooCommerce product display
@@ -94,6 +93,17 @@ function convert_cart_totals($subtotal_html, $cart_item, $cart_item_key) {
 function get_bitcoin_exchange_rate() {
     $exchange_rate_source = get_option('exchange_rate_source', 'coindesk');
 
+    // Check if exchange rate data is stored locally and not expired
+    $stored_exchange_rate = get_option('bitcoin_exchange_rate');
+    $stored_exchange_rate_timestamp = get_option('bitcoin_exchange_rate_timestamp');
+
+    $current_timestamp = time();
+    $ten_minutes_in_seconds = 10 * 60; // 10 minutes
+
+    if ($stored_exchange_rate && ($current_timestamp - $stored_exchange_rate_timestamp) < $ten_minutes_in_seconds) {
+        return $stored_exchange_rate;
+    }
+
     switch ($exchange_rate_source) {
         case 'coindesk':
             $api_url = 'https://api.coindesk.com/v1/bpi/currentprice/BTC.json';
@@ -128,12 +138,20 @@ function get_bitcoin_exchange_rate() {
         switch ($exchange_rate_source) {
             case 'coindesk':
                 if (isset($data['bpi']['USD']['rate_float'])) {
+                    // Store the exchange rate and timestamp locally
+                    update_option('bitcoin_exchange_rate', $data['bpi']['USD']['rate_float']);
+                    update_option('bitcoin_exchange_rate_timestamp', $current_timestamp);
+
                     // Return the current Bitcoin exchange rate
                     return $data['bpi']['USD']['rate_float'];
                 }
                 break;
             case 'coingecko':
                 if (isset($data['bitcoin']['usd'])) {
+                    // Store the exchange rate and timestamp locally
+                    update_option('bitcoin_exchange_rate', $data['bitcoin']['usd']);
+                    update_option('bitcoin_exchange_rate_timestamp', $current_timestamp);
+
                     // Return the current Bitcoin exchange rate
                     return $data['bitcoin']['usd'];
                 }
