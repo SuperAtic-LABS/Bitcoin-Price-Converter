@@ -1,9 +1,11 @@
 <?php
 /*
 Plugin Name: Bitcoin Price Converter
-Description: Converts WooCommerce product prices to Bitcoin using exchange rates.
-Version: 1.0.6
-Author: Your Name
+Plugin URI: https://wordpress.org/plugins/bitcoin-price-converter
+Description: Converts WooCommerce product prices to Bitcoin using exchange rates. Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>. Source code on <a href="https://github.com/SuperAtic/Bitcoin-Price-Converter" target="_blank">GitHub</a>.
+Version: 1.0.8
+Author: SuperAtic
+Author URI: http://SuperAtic.com
 */
 
 // Add Bitcoin price conversion to WooCommerce product display
