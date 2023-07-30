@@ -15,7 +15,7 @@ Converts WooCommerce product prices to Bitcoin using exchange rates.
 Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>. 
 
 Source code on <a href="https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter" target="_blank">GitHub</a>.
-
+Demo [site](https://veintiuno.world/e/%F0%9F%9F%A0%F0%9F%98%81/)
 ![](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter/blob/main/screenshot-1.png)
 ![](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter/blob/main/screenshot-2.png)
 ![](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter/blob/main/screenshot-3.png)
