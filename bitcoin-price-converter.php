@@ -3,10 +3,16 @@
 Plugin Name: Bitcoin Price Converter
 Plugin URI: https://wordpress.org/plugins/bitcoin-price-converter
 Description: Converts WooCommerce product prices to Bitcoin using exchange rates. Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>. Source code on <a href="https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter target="_blank">GitHub</a>.
-Version: 1.0.8
+Version: 1.0.9
 Author: SuperAtic
 Author URI: http://SuperAtic.com
 */
+
+// Enqueue Font Awesome script
+add_action('wp_enqueue_scripts', 'bitcoin_price_converter_enqueue_fontawesome');
+function bitcoin_price_converter_enqueue_fontawesome() {
+    wp_enqueue_script('font-awesome', 'https://kit.fontawesome.com/090ca49637.js', array(), '5.15.3', false);
+}
 
 // Add Bitcoin price conversion to WooCommerce product display
 add_filter('woocommerce_get_price_html', 'convert_price_to_bitcoin', 10, 2);
@@ -167,13 +173,13 @@ function get_bitcoin_exchange_rate() {
 // Format the Bitcoin price based on the selected denomination
 function format_bitcoin_price($price, $denomination) {
     switch ($denomination) {
-        case 'mBTC':
+        case 'milliBTC (mBTC)':
             $formatted_price = number_format($price * 1000, 4, '.', ',') . ' mBTC';
             break;
         case 'sats':
-            $formatted_price = number_format($price * 100000000, 0, '.', ',') . ' sats';
+            $formatted_price = number_format($price * 100000000, 0, '.', ',') . ' <i class="fak fa-xs fa-satoshisymbol-solidtilt"></i>';
             break;
-        case 'BTC':
+        case 'Bitcoin ()':
         default:
             $formatted_price = number_format($price, 8, '.', ',') . ' BTC';
             break;
