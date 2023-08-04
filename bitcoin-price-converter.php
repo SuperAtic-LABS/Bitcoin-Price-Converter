@@ -3,7 +3,7 @@
 Plugin Name: Bitcoin Price Converter
 Plugin URI: https://wordpress.org/plugins/bitcoin-price-converter
 Description: Converts WooCommerce product prices to Bitcoin using exchange rates. Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>. Source code on <a href="https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter target="_blank">GitHub</a>.
-Version: 1.0.9
+Version: 1.1.3
 Author: SuperAtic
 Author URI: http://SuperAtic.com
 */
@@ -16,7 +16,6 @@ function bitcoin_price_converter_enqueue_fontawesome() {
 
 // Add Bitcoin price conversion to WooCommerce product display
 add_filter('woocommerce_get_price_html', 'convert_price_to_bitcoin', 10, 2);
-
 function convert_price_to_bitcoin($price_html, $product) {
     // Get the current Bitcoin exchange rate
     $bitcoin_rate = get_bitcoin_exchange_rate();
@@ -174,14 +173,14 @@ function get_bitcoin_exchange_rate() {
 function format_bitcoin_price($price, $denomination) {
     switch ($denomination) {
         case 'milliBTC (mBTC)':
-            $formatted_price = number_format($price * 1000, 4, '.', ',') . ' mBTC';
+            $formatted_price = number_format($price * 1000, 2, '.', ',') . ' mBTC';
             break;
         case 'sats':
-            $formatted_price = number_format($price * 100000000, 0, '.', ',') . ' <i class="fak fa-xs fa-satoshisymbol-solidtilt"></i>';
+            $formatted_price = number_format($price * 100000000, 0, '.', ',') . ' <i class="fak fa-sm fa-satoshisymbol-solid"></i>';
             break;
         case 'Bitcoin ()':
         default:
-            $formatted_price = number_format($price, 8, '.', ',') . ' BTC';
+            $formatted_price = '₿ ' . number_format($price, 8, '.', ',');
             break;
     }
 
@@ -229,9 +228,19 @@ function bitcoin_price_converter_settings_callback() {
     $show_fiat_price = get_option('show_fiat_price', true);
     $exchange_rate_source = get_option('exchange_rate_source', 'coindesk');
     $custom_exchange_rate_url = get_option('custom_exchange_rate_url');
+    $sample_fiat_price = 1;
+    $sample_price_in_bitcoin = $sample_fiat_price / get_bitcoin_exchange_rate();
     ?>
     <div class="wrap">
+        <script src="https://kit.fontawesome.com/090ca49637.js" crossorigin="anonymous"></script>
         <h1>Bitcoin Price Converter Settings</h1>
+
+        <h2>Preview</h2>
+        <p>Sample Price in Fiat: $<?php echo number_format($sample_fiat_price, 2, '.', ','); ?></p>
+        <p>Sample Price in Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'BTC ₿'); ?></p>
+        <p>Sample Price in milli Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'milliBTC (mBTC)'); ?></p>
+        <p>Sample Price in satoshis: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'sats'); ?></p>
+        <hr>
 
         <form method="post" action="">
             <table class="form-table">
@@ -239,9 +248,9 @@ function bitcoin_price_converter_settings_callback() {
                     <th scope="row">Bitcoin Denomination</th>
                     <td>
                         <select name="bitcoin_denomination">
-                            <option value="BTC" <?php selected($bitcoin_denomination, 'BTC'); ?>>BTC</option>
-                            <option value="mBTC" <?php selected($bitcoin_denomination, 'mBTC'); ?>>mBTC</option>
-                            <option value="sats" <?php selected($bitcoin_denomination, 'sats'); ?>>sats</option>
+                            <option value="BTC" <?php selected($bitcoin_denomination, 'BTC'); ?>> Bitcoin (₿)</option>
+                            <option value="mBTC" <?php selected($bitcoin_denomination, 'mBTC'); ?>>milli Bitcoin (mBTC)</option>
+                            <option value="sats" <?php selected($bitcoin_denomination, 'sats'); ?>>Satoshi (sats)</option>
                         </select>
                     </td>
                 </tr>
@@ -296,4 +305,63 @@ function bitcoin_price_converter_settings_callback() {
         })(jQuery);
     </script>
     <?php
+}
+
+// Add Bitcoin as Unit of Account in product settings
+add_action('woocommerce_product_options_pricing', 'add_bitcoin_as_unit_of_account');
+function add_bitcoin_as_unit_of_account() {
+    woocommerce_wp_checkbox(array(
+        'id' => '_bitcoin_as_unit_of_account',
+        'label' => 'Use Bitcoin as Unit of Account',
+        'description' => 'Enable this option to set Bitcoin as the unit of account for this product.',
+        'desc_tip' => true,
+    ));
+}
+
+// Save Bitcoin as Unit of Account option when product is saved
+add_action('woocommerce_process_product_meta', 'save_bitcoin_as_unit_of_account');
+function save_bitcoin_as_unit_of_account($post_id) {
+    $bitcoin_as_unit_of_account = isset($_POST['_bitcoin_as_unit_of_account']) ? 'yes' : 'no';
+    update_post_meta($post_id, '_bitcoin_as_unit_of_account', $bitcoin_as_unit_of_account);
+}
+
+// Display Bitcoin denomination in product price
+add_filter('woocommerce_get_price_html', 'display_bitcoin_denomination_in_price', 100, 2);
+function display_bitcoin_denomination_in_price($price_html, $product) {
+    $bitcoin_as_unit_of_account = get_post_meta($product->get_id(), '_bitcoin_as_unit_of_account', true);
+
+    if ($bitcoin_as_unit_of_account === 'yes') {
+        $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
+        $price_in_bitcoin = $product->get_price() / get_bitcoin_exchange_rate();
+        $price_html = '(' . format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination) . ')';
+    }
+
+    return $price_html;
+}
+
+// Display Total Price in Bitcoin on the checkout page
+add_action('woocommerce_review_order_after_order_total', 'display_total_price_in_bitcoin');
+function display_total_price_in_bitcoin() {
+    $total_price_in_fiat = WC()->cart->total;
+    $bitcoin_rate = get_bitcoin_exchange_rate();
+    $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
+    $total_price_in_bitcoin = $total_price_in_fiat / $bitcoin_rate;
+    $total_price_html = format_bitcoin_price($total_price_in_bitcoin, $bitcoin_denomination);
+    ?>
+    <tr>
+        <th><?php _e('Total Price in Bitcoin', 'bitcoin-price-converter'); ?></th>
+        <td><?php echo $total_price_html; ?></td>
+    </tr>
+    <?php
+}
+
+// Update plugin version
+add_action('plugins_loaded', 'update_bitcoin_price_converter_version');
+function update_bitcoin_price_converter_version() {
+    $current_version = get_option('bitcoin_price_converter_version', '1.0.0');
+    $new_version = '1.1.3';
+
+    if ($current_version !== $new_version) {
+        update_option('bitcoin_price_converter_version', $new_version);
+    }
 }
