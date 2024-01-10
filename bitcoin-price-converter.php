@@ -12,7 +12,7 @@ Author URI: http://SuperAtic.com
 add_action('wp_enqueue_scripts', 'bitcoin_price_converter_enqueue_fontawesome');
 function bitcoin_price_converter_enqueue_fontawesome() {
     // wp_enqueue_script('font-awesome', 'https://kit.fontawesome.com/090ca49637.js', array(), '5.15.3', false);
-    wp_enqueue_script('font-awesome', 'satsymbol.com-kit090ca49637', array(), '5.15.3', false);
+    wp_enqueue_script('font-awesome', '/wp-content/plugins/bitcoin-price-converter/satsymbol.com-kit090ca49637.js', array(), '5.15.3', false);
 }
 
 // Add Bitcoin price conversion to WooCommerce product display
